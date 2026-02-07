@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Menu, X, ChevronDown, ChevronRight, User, LogOut, LayoutDashboard, Loader2 } from "lucide-react";
+import { Menu, X, ChevronDown, ChevronRight, User, LogOut, LayoutDashboard, Loader2, Shield } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
@@ -37,6 +37,7 @@ const navigation = [
 interface UserData {
     name: string;
     email: string;
+    role?: string;
 }
 
 export function Header() {
@@ -58,9 +59,19 @@ export function Header() {
                 const { data: { user: authUser } } = await supabase.auth.getUser();
 
                 if (authUser) {
+                    // Fetch user role
+                    const { data: dbUser, error: roleError } = await supabase
+                        .from('profiles')
+                        .select('role')
+                        .eq('id', authUser.id)
+                        .single();
+
+                    console.log("Admin Check:", { authUser, dbUser, roleError });
+
                     setUser({
                         name: authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'User',
-                        email: authUser.email || ''
+                        email: authUser.email || '',
+                        role: dbUser?.role
                     });
 
                     // Check for bookings with timeout
@@ -95,9 +106,19 @@ export function Header() {
         // Listen for auth changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
             if (event === 'SIGNED_IN' && session?.user) {
+                // Fetch user role
+                const { data: dbUser, error: roleError } = await supabase
+                    .from('profiles')
+                    .select('role')
+                    .eq('id', session.user.id)
+                    .single();
+
+                console.log("Session Admin Check:", { user: session.user, dbUser, roleError });
+
                 setUser({
                     name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
-                    email: session.user.email || ''
+                    email: session.user.email || '',
+                    role: dbUser?.role
                 });
 
                 // Check for bookings on sign in
@@ -144,6 +165,7 @@ export function Header() {
     };
 
     const initials = user?.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'U';
+    const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
 
     return (
         <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
@@ -218,7 +240,26 @@ export function Header() {
                                     <div className="px-4 py-2 border-b">
                                         <p className="text-sm font-semibold text-gray-900 truncate">{user.name}</p>
                                         <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                                        {isAdmin && (
+                                            <div className="mt-1">
+                                                <span className="text-[10px] uppercase font-bold bg-brand-100 text-brand-700 px-1.5 py-0.5 rounded-full">
+                                                    Admin
+                                                </span>
+                                            </div>
+                                        )}
                                     </div>
+
+                                    {isAdmin && (
+                                        <Link
+                                            href="/admin"
+                                            className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                                            onClick={() => setUserMenuOpen(false)}
+                                        >
+                                            <Shield className="w-4 h-4" />
+                                            Admin Dashboard
+                                        </Link>
+                                    )}
+
                                     <Link
                                         href="/dashboard"
                                         className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
@@ -250,11 +291,13 @@ export function Header() {
                         </>
                     )}
 
-                    <Button variant="gold" size="sm" asChild className="font-semibold shadow-sm">
-                        <Link href={hasBooking ? "/applications" : "/register"}>
-                            {hasBooking ? "View Application" : "Register Now"}
-                        </Link>
-                    </Button>
+                    {!isAdmin && (
+                        <Button variant="gold" size="sm" asChild className="font-semibold shadow-sm">
+                            <Link href={hasBooking ? "/applications" : "/register"}>
+                                {hasBooking ? "View Application" : "Register Now"}
+                            </Link>
+                        </Button>
+                    )}
                 </nav>
 
                 {/* Mobile Menu Toggle */}
@@ -322,8 +365,21 @@ export function Header() {
                                         <div className="flex-1 min-w-0">
                                             <p className="text-sm font-semibold text-gray-900 truncate">{user.name}</p>
                                             <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                                            {isAdmin && (
+                                                <span className="text-[10px] uppercase font-bold bg-brand-100 text-brand-700 px-1.5 py-0.5 rounded-full">
+                                                    Admin
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
+                                    {isAdmin && (
+                                        <Button variant="outline" className="w-full font-semibold" size="lg" asChild>
+                                            <Link href="/admin" onClick={() => setMobileMenuOpen(false)}>
+                                                <Shield className="w-4 h-4 mr-2" />
+                                                Admin Dashboard
+                                            </Link>
+                                        </Button>
+                                    )}
                                     <Button variant="outline" className="w-full font-semibold" size="lg" asChild>
                                         <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
                                             <LayoutDashboard className="w-4 h-4 mr-2" />
@@ -354,11 +410,14 @@ export function Header() {
                                     </Button>
                                 </>
                             )}
-                            <Button variant="gold" className="w-full font-bold shadow-md" size="lg" asChild>
-                                <Link href={hasBooking ? "/applications" : "/register"} onClick={() => setMobileMenuOpen(false)}>
-                                    {hasBooking ? "View Application" : "Register Now"}
-                                </Link>
-                            </Button>
+
+                            {!isAdmin && (
+                                <Button variant="gold" className="w-full font-bold shadow-md" size="lg" asChild>
+                                    <Link href={hasBooking ? "/applications" : "/register"} onClick={() => setMobileMenuOpen(false)}>
+                                        {hasBooking ? "View Application" : "Register Now"}
+                                    </Link>
+                                </Button>
+                            )}
                         </div>
                     </div>
                 </div>
