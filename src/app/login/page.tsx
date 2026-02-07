@@ -23,10 +23,18 @@ export default function LoginPage() {
 
         console.log("Attempting login with:", email);
         try {
-            const { data, error } = await supabase.auth.signInWithPassword({
-                email,
-                password,
+            // Create a timeout promise that rejects after 10 seconds
+            const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => reject(new Error('Request timed out')), 10000);
             });
+
+            const { data, error } = await Promise.race([
+                supabase.auth.signInWithPassword({
+                    email,
+                    password,
+                }),
+                timeoutPromise
+            ]) as any;
 
             console.log("Supabase response:", { data, error });
 
@@ -41,9 +49,9 @@ export default function LoginPage() {
             // Force a hard refresh to update server-side session
             router.refresh();
             window.location.href = '/dashboard';
-        } catch (err) {
+        } catch (err: any) {
             console.error("Unexpected error:", err);
-            setError('An unexpected error occurred');
+            setError(err.message || 'An unexpected error occurred');
             setLoading(false);
         }
     };
