@@ -129,18 +129,16 @@ export function Header() {
                     localStorage.removeItem(key);
                 }
             }
-            // Create a timeout promise
-            const timeoutPromise = new Promise(resolve => setTimeout(resolve, 2000));
-            // Race signOut against timeout
-            await Promise.race([
-                supabase.auth.signOut(),
-                timeoutPromise
-            ]);
+
+            // Call server-side signout route
+            await fetch('/auth/signout', {
+                method: 'POST',
+            });
+
+            // Force verify redirect
+            window.location.href = '/login';
         } catch (e) {
             console.error("Logout error:", e);
-        } finally {
-            // Force refresh to clear server-side state
-            router.refresh();
             window.location.href = '/login';
         }
     };
