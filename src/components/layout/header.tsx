@@ -139,6 +139,8 @@ export function Header() {
         } catch (e) {
             console.error("Logout error:", e);
         } finally {
+            // Force refresh to clear server-side state
+            router.refresh();
             window.location.href = '/login';
         }
     };
