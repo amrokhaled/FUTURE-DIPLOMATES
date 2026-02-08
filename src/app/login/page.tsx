@@ -56,6 +56,52 @@ export default function LoginPage() {
         }
     };
 
+    // Add diagnostics on mount
+    useState(() => { // Using useState lazy initializer or useEffect to run once
+        const runDiagnostics = async () => {
+            console.log("--- DIAGNOSTICS START ---");
+            const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+            const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+            console.log("Env Check:", {
+                hasUrl: !!url,
+                urlPrefix: url ? url.substring(0, 8) + '...' : 'MISSING',
+                hasKey: !!key
+            });
+
+            try {
+                console.log("Ping: Checking session...");
+                const sessionStart = Date.now();
+                const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+                console.log("Ping: Session result:", {
+                    latency: Date.now() - sessionStart,
+                    hasSession: !!sessionData.session,
+                    error: sessionError
+                });
+
+                console.log("Ping: Checking network connection (fetch public.users count)...");
+                const netStart = Date.now();
+                // Using 'head: true' for a lightweight check
+                const { count, error: netError, status } = await supabase.from('users').select('*', { count: 'exact', head: true });
+                console.log("Ping: Network result:", {
+                    latency: Date.now() - netStart,
+                    status,
+                    count,
+                    error: netError
+                });
+
+            } catch (e) {
+                console.error("Ping: DIAGNOSTIC FAILURE", e);
+            }
+            console.log("--- DIAGNOSTICS END ---");
+        };
+
+        // Run on client only
+        if (typeof window !== 'undefined') {
+            runDiagnostics();
+        }
+    });
+
     return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
             <div className="w-full max-w-md">
