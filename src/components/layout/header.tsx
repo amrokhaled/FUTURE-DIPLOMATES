@@ -105,7 +105,12 @@ export function Header() {
             }
         }
 
-        checkUser();
+        // Safety timeout - ensure loading stops after 3 seconds max even if auth hangs
+        const timeoutId = setTimeout(() => {
+            setLoading(false);
+        }, 3000);
+
+        checkUser().finally(() => clearTimeout(timeoutId));
 
         // Listen for auth changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
