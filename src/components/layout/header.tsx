@@ -41,6 +41,7 @@ interface UserData {
 }
 
 export function Header() {
+    // Version: Request-Guest-Refactor-v2
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [expandedItem, setExpandedItem] = useState<string | null>(null);
     const [user, setUser] = useState<UserData | null>(null);
