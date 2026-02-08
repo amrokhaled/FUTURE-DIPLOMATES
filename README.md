@@ -1,66 +1,36 @@
-# International Diplomacy & Leadership Conference Platform
-
-A high-converting, professional website for managing international summits, developed with Next.js 14 and Tailwind CSS.
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
 
-### 1. Install Dependencies
-
-Since this project was built without initial `npm install`, you must run:
-
-```bash
-npm install
-```
-
-### 2. Configure Environment
-
-Create a `.env.local` file in the root directory and add your keys (see `.env.example`).
-
-```bash
-cp .env.example .env.local
-```
-
-### 3. Setup Database
-
-This project is configured for **Supabase**.
-1. Copy the contents of `supabase/migrations/001_initial_schema.sql` and run it in your Supabase SQL Editor.
-2. Update `.env.local` with your Supabase URL and Keys.
-
-### 4. Run Development Server
+First, run the development server:
 
 ```bash
 npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser.
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-## Features Implemented
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-- **Public Pages**:
-  - Home (Hero, Stats, Summits Preview)
-  - Destinations Grid (`/summits`)
-  - Single Destination with Itinerary (`/summits/[slug]`)
-  - Scholarship Application (`/scholarship`)
-  - Media Center (`/gallery`)
-  - Visa Information (`/visa-assistance`)
-  - About Us (`/mission`)
-- **Core Features**:
-  - **Multi-step Registration Form** with Delegate/VIP packages.
-  - **Visa Letter Generation Logic** (Puppeteer).
-  - **Responsive Design** with mobile navigation.
-  - **Database Schema** for Users, Events, Bookings, Payments.
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-## Database Schema
+## Learn More
 
-See `supabase/migrations/001_initial_schema.sql` for the full PostgeSQL structure.
+To learn more about Next.js, take a look at the following resources:
 
-## Tech Stack
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-- **Framework**: Next.js 14 (App Router)
-- **Styling**: Tailwind CSS
-- **Icons**: Lucide React
-- **Validation**: Zod + React Hook Form (Code logic implemented)
-- **Backend Logic**: Supabase (ready for integration)
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## Deployment Status
-- Latest Guest Refactor Deployment: v4 (Trigger Vercel)
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
