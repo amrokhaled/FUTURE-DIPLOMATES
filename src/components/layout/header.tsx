@@ -113,7 +113,7 @@ export function Header() {
         checkUser().finally(() => clearTimeout(timeoutId));
 
         // Listen for auth changes
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: string, session: any) => {
             if (event === 'SIGNED_IN' && session?.user) {
                 // Fetch user role
                 const { data: dbUser, error: roleError } = await supabase

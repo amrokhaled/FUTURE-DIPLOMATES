@@ -32,21 +32,34 @@ export async function middleware(request: NextRequest) {
         }
     )
 
+    const url = request.nextUrl
+    const hostname = request.headers.get('host') || ''
+
+    // 1. Admin Subdomain Routing
+    // Check if the hostname starts with "admin." (e.g. admin.futurediplomats.com or admin.localhost:3000)
+    const isAdminSubdomain = hostname.startsWith('admin.')
+
+    // If it's the admin subdomain, rewrite the path to /admin/...
+    if (isAdminSubdomain && !url.pathname.startsWith('/admin')) {
+        return NextResponse.rewrite(new URL(`/admin${url.pathname}`, request.url))
+    }
+
+    // 2. Auth Protection (Legacy /dashboard routes)
     const { data: { user } } = await supabase.auth.getUser()
 
-    // Protected routes
-    if (request.nextUrl.pathname.startsWith('/dashboard') ||
-        request.nextUrl.pathname.startsWith('/applications') ||
-        request.nextUrl.pathname.startsWith('/documents')) {
+    // Protect dashboard routes
+    if (url.pathname.startsWith('/dashboard') ||
+        url.pathname.startsWith('/applications') ||
+        url.pathname.startsWith('/documents')) {
 
         if (!user) {
             return NextResponse.redirect(new URL('/login', request.url))
         }
     }
 
-    // Redirect old routes if any
-    if (request.nextUrl.pathname.startsWith('/portal/')) {
-        const newPath = request.nextUrl.pathname.replace('/portal/', '/')
+    // 3. Redirect old portal routes
+    if (url.pathname.startsWith('/portal/')) {
+        const newPath = url.pathname.replace('/portal/', '/')
         return NextResponse.redirect(new URL(newPath, request.url))
     }
 
