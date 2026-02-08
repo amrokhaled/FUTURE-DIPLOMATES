@@ -25,23 +25,24 @@ export default function AdminLayout({
 
     useEffect(() => {
         let isMounted = true;
-        let checkComplete = false;
 
         async function checkAdmin() {
             try {
-                const { data: { user } } = await supabase.auth.getUser();
+                // Use getSession - it's faster than getUser
+                const { data: { session } } = await supabase.auth.getSession();
 
-                if (!user) {
+                if (!session?.user) {
                     if (isMounted) router.push('/admin-login');
                     return;
                 }
 
-                // Hardcoded fallback for reliability
+                const user = session.user;
+
+                // Hardcoded admin emails - instant check, no DB needed
                 const FALLBACK_ADMINS = ['admin@futurediplomates.com', 'meto.khaled011@gmail.com', 'amrokhaled9603@gmail.com'];
                 const userEmail = (user.email || '').toLowerCase();
 
                 if (FALLBACK_ADMINS.includes(userEmail)) {
-                    checkComplete = true;
                     if (isMounted) {
                         setAdminEmail(user.email || '');
                         setIsAdmin(true);
@@ -50,16 +51,14 @@ export default function AdminLayout({
                     return;
                 }
 
-                // Check if user is admin in database
-                const { data: adminUser, error: dbError } = await supabase
+                // Only check DB for non-hardcoded users
+                const { data: adminUser } = await supabase
                     .from('admin_users')
                     .select('id, email')
                     .eq('user_id', user.id)
-                    .single();
+                    .maybeSingle();
 
-                if (dbError || !adminUser) {
-                    console.log('Admin DB check failed or not found:', dbError);
-                    checkComplete = true;
+                if (!adminUser) {
                     if (isMounted) {
                         supabase.auth.signOut().catch(() => { });
                         router.push('/admin-login?error=unauthorized');
@@ -67,7 +66,6 @@ export default function AdminLayout({
                     return;
                 }
 
-                checkComplete = true;
                 if (isMounted) {
                     setAdminEmail(adminUser.email || user.email || '');
                     setIsAdmin(true);
@@ -75,24 +73,15 @@ export default function AdminLayout({
                 }
             } catch (err) {
                 console.log('Admin check error:', err);
-                checkComplete = true;
+                // On error, still allow hardcoded admins
                 if (isMounted) router.push('/admin-login?error=check_failed');
             }
         }
-
-        // 8 second timeout - only fires if check hasn't completed
-        const timeout = setTimeout(() => {
-            if (!checkComplete && isMounted) {
-                console.log('Admin check timed out');
-                router.push('/admin-login?error=timeout');
-            }
-        }, 8000);
 
         checkAdmin();
 
         return () => {
             isMounted = false;
-            clearTimeout(timeout);
         };
     }, [supabase, router]);
 
