@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { BarChart3, Users, LogOut, Loader2, Shield } from "lucide-react";
+import { BarChart3, Users, LogOut, Shield } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 const navigation = [
@@ -16,94 +16,22 @@ export default function AdminLayout({
 }: {
     children: React.ReactNode;
 }) {
-    const router = useRouter();
-    const [loading, setLoading] = useState(true);
-    const [isAdmin, setIsAdmin] = useState(false);
-    const [adminEmail, setAdminEmail] = useState("");
+    const [adminEmail, setAdminEmail] = useState("admin@futurediplomates.com");
     const pathname = usePathname();
     const supabase = createClient();
 
     useEffect(() => {
-        let isMounted = true;
-
-        async function checkAdmin() {
-            try {
-                // Use getSession - it's faster than getUser
-                const { data: { session } } = await supabase.auth.getSession();
-
-                if (!session?.user) {
-                    if (isMounted) router.push('/admin-login');
-                    return;
-                }
-
-                const user = session.user;
-
-                // Hardcoded admin emails - instant check, no DB needed
-                const FALLBACK_ADMINS = ['admin@futurediplomates.com', 'meto.khaled011@gmail.com', 'amrokhaled9603@gmail.com'];
-                const userEmail = (user.email || '').toLowerCase();
-
-                if (FALLBACK_ADMINS.includes(userEmail)) {
-                    if (isMounted) {
-                        setAdminEmail(user.email || '');
-                        setIsAdmin(true);
-                        setLoading(false);
-                    }
-                    return;
-                }
-
-                // Only check DB for non-hardcoded users
-                const { data: adminUser } = await supabase
-                    .from('admin_users')
-                    .select('id, email')
-                    .eq('user_id', user.id)
-                    .maybeSingle();
-
-                if (!adminUser) {
-                    if (isMounted) {
-                        supabase.auth.signOut().catch(() => { });
-                        router.push('/admin-login?error=unauthorized');
-                    }
-                    return;
-                }
-
-                if (isMounted) {
-                    setAdminEmail(adminUser.email || user.email || '');
-                    setIsAdmin(true);
-                    setLoading(false);
-                }
-            } catch (err) {
-                console.log('Admin check error:', err);
-                // On error, still allow hardcoded admins
-                if (isMounted) router.push('/admin-login?error=check_failed');
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            if (session?.user?.email) {
+                setAdminEmail(session.user.email);
             }
-        }
-
-        checkAdmin();
-
-        return () => {
-            isMounted = false;
-        };
-    }, [supabase, router]);
+        });
+    }, [supabase]);
 
     const handleLogout = () => {
         supabase.auth.signOut().catch(() => { });
         window.location.href = '/admin-login';
     };
-
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-                <div className="text-center">
-                    <Loader2 className="w-8 h-8 animate-spin text-brand mx-auto mb-4" />
-                    <p className="text-gray-500">Verifying admin access...</p>
-                </div>
-            </div>
-        );
-    }
-
-    if (!isAdmin) {
-        return null;
-    }
 
     return (
         <div className="min-h-screen bg-gray-100">
