@@ -93,16 +93,13 @@ export function Header() {
                 }
             } catch (err) {
                 console.log('Auth check failed:', err);
+                setUser(null);
+            } finally {
+                setLoading(false);
             }
-            setLoading(false);
         }
 
-        // Timeout fallback - stop loading after 3 seconds max
-        const timeout = setTimeout(() => {
-            if (loading) setLoading(false);
-        }, 3000);
-
-        checkUser().finally(() => clearTimeout(timeout));
+        checkUser();
 
         // Listen for auth changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
