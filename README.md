@@ -61,3 +61,6 @@ See `supabase/migrations/001_initial_schema.sql` for the full PostgeSQL structur
 - **Icons**: Lucide React
 - **Validation**: Zod + React Hook Form (Code logic implemented)
 - **Backend Logic**: Supabase (ready for integration)
+
+## Deployment Status
+- Latest Guest Refactor Deployment: v4 (Trigger Vercel)
