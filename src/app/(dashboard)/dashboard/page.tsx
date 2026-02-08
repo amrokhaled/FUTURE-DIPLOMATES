@@ -18,11 +18,9 @@ export default function UserDashboard() {
     const [loading, setLoading] = useState(true);
     const [userName, setUserName] = useState("User");
     const [userEmail, setUserEmail] = useState("");
-    const [isAdmin, setIsAdmin] = useState(false);
 
     const supabase = createClient();
 
-    const ADMIN_EMAILS = ['meto.khaled011@gmail.com', 'amrokhaled9603@gmail.com'];
 
     useEffect(() => {
         async function init() {
@@ -33,11 +31,7 @@ export default function UserDashboard() {
                     setUserName(fullName);
                     setUserEmail(user.email || '');
 
-                    // Case-insensitive email check with trim
-                    const email = (user.email || '').toLowerCase().trim();
-                    const isAdm = ADMIN_EMAILS.some(e => e.toLowerCase().trim() === email);
-                    console.log('Admin Check:', { email, isAdm, admins: ADMIN_EMAILS });
-                    setIsAdmin(isAdm);
+
                 }
             } catch (e) {
                 console.log('Init error:', e);
@@ -64,33 +58,15 @@ export default function UserDashboard() {
             <div>
                 <h1 className="text-3xl font-bold text-gray-900">
                     Welcome, {userName.split(' ')[0]}!
-                    {isAdmin && (
-                        <span className="ml-3 text-sm bg-brand text-white px-3 py-1 rounded-full">Admin</span>
-                    )}
+
                 </h1>
                 <p className="text-gray-500 mt-1">
-                    {isAdmin ? 'Manage applications and view registrations.' : 'Your dashboard for Cairo 2026.'}
+                    Your dashboard for Cairo 2026.
                 </p>
             </div>
 
-            {/* Admin Section */}
-            {isAdmin && (
-                <div className="bg-gradient-to-r from-slate-800 to-slate-900 text-white rounded-2xl p-6">
-                    <div className="flex items-center gap-3 mb-4">
-                        <Users className="w-6 h-6" />
-                        <h2 className="text-xl font-bold">Admin Panel</h2>
-                    </div>
-                    <p className="text-slate-300 mb-4">Manage all applications and registrations.</p>
-                    <div className="flex gap-3">
-                        <Link href="/applications">
-                            <Button className="bg-white text-slate-900 hover:bg-slate-100">
-                                <ClipboardList className="w-4 h-4 mr-2" />
-                                View All Applications
-                            </Button>
-                        </Link>
-                    </div>
-                </div>
-            )}
+
+
 
             {/* Quick Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

@@ -40,9 +40,7 @@ export default function DashboardLayout({
     const [loading, setLoading] = useState(true);
     const [loggingOut, setLoggingOut] = useState(false);
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const [isAdmin, setIsAdmin] = useState(false);
 
-    const ADMIN_EMAILS = ['meto.khaled011@gmail.com', 'amrokhaled9603@gmail.com'];
 
     useEffect(() => {
         async function getUser() {
@@ -61,9 +59,7 @@ export default function DashboardLayout({
                     email: authUser.email || ''
                 });
 
-                if (ADMIN_EMAILS.some(e => e.toLowerCase() === email)) {
-                    setIsAdmin(true);
-                }
+
 
             } catch (err) {
                 console.log('Auth check error:', err);
@@ -129,7 +125,7 @@ export default function DashboardLayout({
                     </Button>
                     <span className="font-bold text-gray-900">Diplomats Portal</span>
                 </div>
-                {isAdmin && <span className="text-xs bg-brand text-white px-2 py-1 rounded-full">Admin</span>}
+
             </div>
 
             {/* Sidebar - Desktop & Mobile Overlay */}

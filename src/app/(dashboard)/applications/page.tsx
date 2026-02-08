@@ -19,10 +19,8 @@ interface Application {
 export default function ApplicationsPage() {
     const [loading, setLoading] = useState(true);
     const [applications, setApplications] = useState<Application[]>([]);
-    const [isAdmin, setIsAdmin] = useState(false);
 
     const supabase = createClient();
-    const ADMIN_EMAILS = ['meto.khaled011@gmail.com', 'amrokhaled9603@gmail.com'];
 
     useEffect(() => {
         async function fetchData() {
@@ -30,17 +28,13 @@ export default function ApplicationsPage() {
                 const { data: { user } } = await supabase.auth.getUser();
 
                 if (user) {
-                    const email = (user.email || '').toLowerCase();
-                    const admin = ADMIN_EMAILS.some(e => e.toLowerCase() === email);
-                    setIsAdmin(admin);
-
-                    // Admin sees all applications, regular user sees their own
                     try {
-                        const query = admin
-                            ? supabase.from('applications').select('*').order('created_at', { ascending: false }).limit(50)
-                            : supabase.from('applications').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+                        const { data } = await supabase
+                            .from('applications')
+                            .select('*')
+                            .eq('user_id', user.id)
+                            .order('created_at', { ascending: false });
 
-                        const { data } = await query;
                         if (data) setApplications(data);
                     } catch (err) {
                         console.log('Applications fetch failed:', err);
@@ -86,19 +80,10 @@ export default function ApplicationsPage() {
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-                        {isAdmin ? (
-                            <>
-                                <Users className="w-8 h-8 text-brand" />
-                                All Applications
-                            </>
-                        ) : (
-                            'My Applications'
-                        )}
+                        My Applications
                     </h1>
                     <p className="text-gray-500">
-                        {isAdmin
-                            ? `Viewing all ${applications.length} applications.`
-                            : 'Track your program applications and their status.'}
+                        Track your program applications and their status.
                     </p>
                 </div>
                 <Link href="/register">
@@ -150,10 +135,9 @@ export default function ApplicationsPage() {
                                     </div>
                                     <div>
                                         <h3 className="font-bold text-lg">
-                                            {isAdmin ? (app.full_name || app.email || 'Unknown') : (app.program_name || 'Cairo 2026')}
+                                            {app.program_name || 'Cairo 2026'}
                                         </h3>
                                         <p className="text-sm text-gray-500">
-                                            {isAdmin && app.email && <span className="block">{app.email}</span>}
                                             Submitted: {new Date(app.created_at || app.submitted_at || Date.now()).toLocaleDateString()}
                                         </p>
                                     </div>
