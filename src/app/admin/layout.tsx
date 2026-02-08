@@ -32,7 +32,7 @@ export default function AdminLayout({
                     return;
                 }
 
-                const ADMIN_EMAILS = ['meto.khaled011@gmail.com', 'amrokhaled9603@gmail.com'];
+                const ADMIN_EMAILS = ['meto.khaled011@gmail.com', 'amrokhaled9603@gmail.com', 'admin@futurediplomates.com'];
                 const email = (user.email || '').toLowerCase();
 
                 if (ADMIN_EMAILS.some(e => e.toLowerCase() === email)) {

@@ -40,7 +40,7 @@ export default function AdminLoginPage() {
         }
 
         // Check if user is an admin
-        const ADMIN_EMAILS = ['meto.khaled011@gmail.com', 'amrokhaled9603@gmail.com'];
+        const ADMIN_EMAILS = ['meto.khaled011@gmail.com', 'amrokhaled9603@gmail.com', 'admin@futurediplomates.com'];
         const userEmail = (authData.user.email || '').toLowerCase();
 
         if (ADMIN_EMAILS.some(e => e.toLowerCase() === userEmail)) {
