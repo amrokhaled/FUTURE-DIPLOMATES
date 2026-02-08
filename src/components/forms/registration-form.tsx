@@ -44,7 +44,7 @@ export function RegistrationForm() {
         investmentAmount: "",
 
         // Package
-        package: "",
+        package: "conference",
         accommodation: false,
     });
 
@@ -156,7 +156,7 @@ export function RegistrationForm() {
                     event_date: '2026-07-15',
                     package_type: formData.package,
                     payment_status: 'pending',
-                    amount: formData.package === 'vip' ? 1500 : formData.package === 'premium' ? 1000 : 500,
+                    amount: formData.package === 'premium' ? 1150 : 750,
                     attendee_name: `${formData.firstName} ${formData.lastName}`.trim(),
                     attendee_email: formData.email,
                     attendee_phone: formData.phone,
@@ -549,39 +549,7 @@ export function RegistrationForm() {
                                 />
                             </div>
 
-                            {/* Package Selection */}
-                            <div className="space-y-3 pt-4 border-t">
-                                <label className="text-sm font-bold">Select Package <span className="text-red-500">*</span></label>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {[
-                                        { value: 'conference', label: 'Conference Only', price: '$750' },
-                                        { value: 'premium', label: 'Premium Package', price: '$1150' }
-                                    ].map((pkg) => (
-                                        <label
-                                            key={pkg.value}
-                                            className={cn(
-                                                "flex items-center justify-between p-4 border rounded-xl cursor-pointer transition-all",
-                                                formData.package === pkg.value
-                                                    ? "border-brand bg-brand-50 ring-1 ring-brand"
-                                                    : "hover:border-gray-300"
-                                            )}
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <input
-                                                    type="radio"
-                                                    name="package"
-                                                    value={pkg.value}
-                                                    checked={formData.package === pkg.value}
-                                                    onChange={(e) => setFormData({ ...formData, package: e.target.value })}
-                                                    className="accent-brand w-4 h-4"
-                                                />
-                                                <span className="font-medium">{pkg.label}</span>
-                                            </div>
-                                            <span className="font-bold text-gray-900">{pkg.price}</span>
-                                        </label>
-                                    ))}
-                                </div>
-                            </div>
+                            {/* Default Package: Conference Only ($750) - Selection Removed as per Request */}
 
                         </div>
                     </div>
