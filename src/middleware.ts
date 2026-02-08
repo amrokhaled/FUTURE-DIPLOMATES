@@ -45,7 +45,19 @@ export async function middleware(request: NextRequest) {
     }
 
     // 2. Auth Protection (Legacy /dashboard routes)
-    const { data: { user } } = await supabase.auth.getUser()
+    let user = null
+    try {
+        const { data: { user: authUser }, error } = await supabase.auth.getUser()
+        if (error) {
+            // Ignore "refresh_token_not_found" or similar errors, treating them as no session
+            // console.log("Middleware Auth Error:", error.message) 
+        } else {
+            user = authUser
+        }
+    } catch (e) {
+        // Fallback for any unexpected auth errors
+        user = null
+    }
 
     // Protect dashboard routes
     if (url.pathname.startsWith('/dashboard') ||
