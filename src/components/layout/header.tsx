@@ -282,12 +282,7 @@ export function Header() {
                     ) : (
                         // Not logged in - show login/signup
                         <>
-                            <Button variant="ghost" size="sm" asChild className="font-semibold text-gray-700 hover:text-brand hover:bg-brand-50">
-                                <Link href="/login">Log In</Link>
-                            </Button>
-                            <Button variant="ghost" size="sm" asChild className="font-semibold text-gray-700 hover:text-brand hover:bg-brand-50">
-                                <Link href="/signup">Sign Up</Link>
-                            </Button>
+                            {/* Public Login/Signup hidden for guests as requested */}
                         </>
                     )}
 
@@ -402,12 +397,7 @@ export function Header() {
                                 </>
                             ) : (
                                 <>
-                                    <Button variant="ghost" className="w-full font-semibold text-gray-700 hover:text-brand hover:bg-brand-50" size="lg" asChild>
-                                        <Link href="/login" onClick={() => setMobileMenuOpen(false)}>Log In</Link>
-                                    </Button>
-                                    <Button variant="ghost" className="w-full font-semibold text-gray-700 hover:text-brand hover:bg-brand-50" size="lg" asChild>
-                                        <Link href="/signup" onClick={() => setMobileMenuOpen(false)}>Sign Up</Link>
-                                    </Button>
+                                    {/* Public Login/Signup hidden for guests as requested */}
                                 </>
                             )}
 
