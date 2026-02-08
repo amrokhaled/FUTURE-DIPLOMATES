@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { BarChart3, Users, LogOut, Loader2, Shield } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -16,6 +16,7 @@ export default function AdminLayout({
 }: {
     children: React.ReactNode;
 }) {
+    const router = useRouter();
     const [loading, setLoading] = useState(true);
     const [isAdmin, setIsAdmin] = useState(false);
     const [adminEmail, setAdminEmail] = useState("");
@@ -23,46 +24,72 @@ export default function AdminLayout({
     const supabase = createClient();
 
     useEffect(() => {
+        let isMounted = true;
+
         async function checkAdmin() {
             try {
                 const { data: { user } } = await supabase.auth.getUser();
 
                 if (!user) {
-                    window.location.href = '/admin-login';
+                    if (isMounted) router.push('/admin-login');
+                    return;
+                }
+
+                // Hardcoded fallback for reliability
+                const FALLBACK_ADMINS = ['admin@futurediplomates.com', 'meto.khaled011@gmail.com', 'amrokhaled9603@gmail.com'];
+                const userEmail = (user.email || '').toLowerCase();
+
+                if (FALLBACK_ADMINS.includes(userEmail)) {
+                    if (isMounted) {
+                        setAdminEmail(user.email || '');
+                        setIsAdmin(true);
+                        setLoading(false);
+                    }
                     return;
                 }
 
                 // Check if user is admin in database
-                const { data: adminUser } = await supabase
+                const { data: adminUser, error: dbError } = await supabase
                     .from('admin_users')
                     .select('id, email')
                     .eq('user_id', user.id)
                     .single();
 
-                if (!adminUser) {
-                    // Not an admin
-                    supabase.auth.signOut().catch(() => { });
-                    window.location.href = '/admin-login?error=unauthorized';
+                if (dbError || !adminUser) {
+                    console.log('Admin DB check failed or not found:', dbError);
+                    if (isMounted) {
+                        supabase.auth.signOut().catch(() => { });
+                        router.push('/admin-login?error=unauthorized');
+                    }
                     return;
                 }
 
-                setAdminEmail(adminUser.email || user.email || '');
-                setIsAdmin(true);
+                if (isMounted) {
+                    setAdminEmail(adminUser.email || user.email || '');
+                    setIsAdmin(true);
+                    setLoading(false);
+                }
             } catch (err) {
                 console.log('Admin check error:', err);
-                window.location.href = '/admin-login?error=check_failed';
+                if (isMounted) router.push('/admin-login?error=check_failed');
             }
-            setLoading(false);
         }
 
-        // 5 second timeout - if check takes too long, redirect to login
+        // 8 second timeout - slightly longer for reliability
         const timeout = setTimeout(() => {
-            console.log('Admin check timed out');
-            window.location.href = '/admin-login?error=timeout';
-        }, 5000);
+            if (loading && isMounted) {
+                console.log('Admin check timed out');
+                router.push('/admin-login?error=timeout');
+            }
+        }, 8000);
 
-        checkAdmin().finally(() => clearTimeout(timeout));
-    }, [supabase]);
+        checkAdmin();
+
+        return () => {
+            isMounted = false;
+            clearTimeout(timeout);
+        };
+    }, [supabase, router]);
 
     const handleLogout = () => {
         supabase.auth.signOut().catch(() => { });

@@ -40,6 +40,15 @@ export default function AdminLoginPage() {
         }
 
         // Check if user is an admin
+        const FALLBACK_ADMINS = ['admin@futurediplomates.com', 'meto.khaled011@gmail.com', 'amrokhaled9603@gmail.com'];
+        const userEmail = (authData.user.email || '').toLowerCase();
+
+        if (FALLBACK_ADMINS.includes(userEmail)) {
+            router.push('/admin');
+            router.refresh();
+            return;
+        }
+
         const { data: adminUser, error: adminError } = await supabase
             .from('admin_users')
             .select('id, role')
@@ -47,6 +56,7 @@ export default function AdminLoginPage() {
             .single();
 
         if (adminError || !adminUser) {
+            console.error('Admin check error or not found:', adminError);
             // Sign out the user since they're not an admin
             const timeoutPromise = new Promise(resolve => setTimeout(resolve, 1000));
             await Promise.race([
