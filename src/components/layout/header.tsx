@@ -41,7 +41,7 @@ interface UserData {
 }
 
 export function Header() {
-    // Version: Request-Guest-Refactor-v2
+    // Version: Request-Guest-Refactor-v3 (Trigger Vercel)
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [expandedItem, setExpandedItem] = useState<string | null>(null);
     const [user, setUser] = useState<UserData | null>(null);
