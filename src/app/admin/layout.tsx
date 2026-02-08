@@ -25,6 +25,7 @@ export default function AdminLayout({
 
     useEffect(() => {
         let isMounted = true;
+        let checkComplete = false;
 
         async function checkAdmin() {
             try {
@@ -40,6 +41,7 @@ export default function AdminLayout({
                 const userEmail = (user.email || '').toLowerCase();
 
                 if (FALLBACK_ADMINS.includes(userEmail)) {
+                    checkComplete = true;
                     if (isMounted) {
                         setAdminEmail(user.email || '');
                         setIsAdmin(true);
@@ -57,6 +59,7 @@ export default function AdminLayout({
 
                 if (dbError || !adminUser) {
                     console.log('Admin DB check failed or not found:', dbError);
+                    checkComplete = true;
                     if (isMounted) {
                         supabase.auth.signOut().catch(() => { });
                         router.push('/admin-login?error=unauthorized');
@@ -64,6 +67,7 @@ export default function AdminLayout({
                     return;
                 }
 
+                checkComplete = true;
                 if (isMounted) {
                     setAdminEmail(adminUser.email || user.email || '');
                     setIsAdmin(true);
@@ -71,13 +75,14 @@ export default function AdminLayout({
                 }
             } catch (err) {
                 console.log('Admin check error:', err);
+                checkComplete = true;
                 if (isMounted) router.push('/admin-login?error=check_failed');
             }
         }
 
-        // 8 second timeout - slightly longer for reliability
+        // 8 second timeout - only fires if check hasn't completed
         const timeout = setTimeout(() => {
-            if (loading && isMounted) {
+            if (!checkComplete && isMounted) {
                 console.log('Admin check timed out');
                 router.push('/admin-login?error=timeout');
             }
