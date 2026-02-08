@@ -7,7 +7,6 @@ import {
     LayoutDashboard,
     Users,
     Globe,
-    Settings,
     LogOut,
     Menu,
     ShieldCheck
@@ -29,15 +28,38 @@ export default function AdminLayout({
 
     useEffect(() => {
         async function checkAdmin() {
-            const { data: { user } } = await supabase.auth.getUser();
+            try {
+                console.log("Admin Layout: Checking auth...");
+                const { data: { user }, error } = await supabase.auth.getUser();
 
-            const ADMIN_EMAILS = ['meto.khaled011@gmail.com', 'amrokhaled9603@gmail.com', 'admin@futurediplomates.com'];
+                if (error) {
+                    console.error("Admin Layout: Auth error:", error);
+                    router.push('/login?next=/admin');
+                    return;
+                }
 
-            if (!user || (user.email && !ADMIN_EMAILS.includes(user.email.toLowerCase()))) {
-                // Not authorized
-                router.push('/');
+                console.log("Admin Layout: User found:", user?.email);
+
+                const ADMIN_EMAILS = ['meto.khaled011@gmail.com', 'amrokhaled9603@gmail.com', 'admin@futurediplomates.com'];
+
+                if (!user) {
+                    console.log("Admin Check: No user found, redirecting to login");
+                    router.push('/login?next=/admin');
+                    return;
+                }
+
+                if (user.email && !ADMIN_EMAILS.includes(user.email.toLowerCase())) {
+                    console.log("Admin Check: User email not authorized:", user.email);
+                    router.push('/'); // Or a dedicated "Unauthorized" page
+                    return;
+                }
+
+                console.log("Admin Check: Authorized as", user.email);
+            } catch (err) {
+                console.error("Admin Layout: Unexpected error:", err);
+            } finally {
+                setLoading(false);
             }
-            setLoading(false);
         }
         checkAdmin();
     }, [supabase, router]);
@@ -52,7 +74,6 @@ export default function AdminLayout({
         { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
         { name: 'Applications', href: '/admin/applications', icon: Users },
         { name: 'Summits (CMS)', href: '/admin/summits', icon: Globe },
-        { name: 'Settings', href: '/admin/settings', icon: Settings },
     ];
 
     return (

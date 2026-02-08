@@ -40,8 +40,11 @@ export default function SummitsCMS() {
     const [dates, setDates] = useState("");
     const [image, setImage] = useState("");
     const [desc, setDesc] = useState("");
+    const [isActive, setIsActive] = useState(true);
 
     const supabase = createClient();
+
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
 
     useEffect(() => {
         fetchSummits();
@@ -53,20 +56,24 @@ export default function SummitsCMS() {
         setLoading(false);
     }
 
-    function resetForm() {
+    function openAddModal() {
         setCity("");
         setDates("");
         setImage("");
         setDesc("");
+        setIsActive(true);
         setEditingSummit(null);
+        setIsDialogOpen(true);
     }
 
-    function loadForEdit(summit: Summit) {
+    function openEditModal(summit: Summit) {
         setEditingSummit(summit);
         setCity(summit.city);
         setDates(summit.dates);
         setImage(summit.image_url);
         setDesc(summit.description);
+        setIsActive(summit.is_active);
+        setIsDialogOpen(true);
     }
 
     async function handleSave() {
@@ -74,7 +81,7 @@ export default function SummitsCMS() {
             // Update
             const { error } = await supabase
                 .from('summits')
-                .update({ city, dates, image_url: image, description: desc })
+                .update({ city, dates, image_url: image, description: desc, is_active: isActive })
                 .eq('id', editingSummit.id);
 
             if (!error) fetchSummits();
@@ -82,11 +89,11 @@ export default function SummitsCMS() {
             // Insert
             const { error } = await supabase
                 .from('summits')
-                .insert([{ city, dates, image_url: image, description: desc, is_active: true }]);
+                .insert([{ city, dates, image_url: image, description: desc, is_active: isActive }]);
 
             if (!error) fetchSummits();
         }
-        resetForm();
+        setIsDialogOpen(false);
     }
 
     async function handleDelete(id: string) {
@@ -112,38 +119,7 @@ export default function SummitsCMS() {
                     <p className="text-slate-500">Manage upcoming summits displayed on the website.</p>
                 </div>
 
-                <Dialog onOpenChange={(open) => !open && resetForm()}>
-                    <DialogTrigger asChild>
-                        <Button onClick={resetForm}><Plus className="h-4 w-4 mr-2" /> Add New Summit</Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>{editingSummit ? 'Edit Summit' : 'Add New Summit'}</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-4 py-4">
-                            <div>
-                                <label className="text-sm font-medium">City Name</label>
-                                <Input value={city} onChange={e => setCity(e.target.value)} placeholder="e.g. Cairo, Egypt" />
-                            </div>
-                            <div>
-                                <label className="text-sm font-medium">Dates</label>
-                                <Input value={dates} onChange={e => setDates(e.target.value)} placeholder="e.g. July 15-20, 2026" />
-                            </div>
-                            <div>
-                                <label className="text-sm font-medium">Image URL</label>
-                                <Input value={image} onChange={e => setImage(e.target.value)} placeholder="https://..." />
-                            </div>
-                            <div>
-                                <label className="text-sm font-medium">Description</label>
-                                {/* Fallback to Input if Textarea is missing in UI lib, but preferred textarea */}
-                                <Input value={desc} onChange={e => setDesc(e.target.value)} placeholder="Short description..." />
-                            </div>
-                            <Button onClick={handleSave} className="w-full">
-                                {editingSummit ? 'Update Summit' : 'Create Summit'}
-                            </Button>
-                        </div>
-                    </DialogContent>
-                </Dialog>
+                <Button onClick={openAddModal}><Plus className="h-4 w-4 mr-2" /> Add New Summit</Button>
             </div>
 
             {loading ? <div>Loading content...</div> : (
@@ -172,37 +148,9 @@ export default function SummitsCMS() {
                                     {summit.is_active ? 'Hide' : 'Show'}
                                 </Button>
                                 <div className="flex gap-2">
-                                    <Dialog>
-                                        <DialogTrigger asChild>
-                                            <Button variant="outline" size="icon" onClick={() => loadForEdit(summit)}>
-                                                <Edit2 className="h-4 w-4" />
-                                            </Button>
-                                        </DialogTrigger>
-                                        <DialogContent>
-                                            <DialogHeader>
-                                                <DialogTitle>Edit Summit</DialogTitle>
-                                            </DialogHeader>
-                                            <div className="space-y-4 py-4">
-                                                <div>
-                                                    <label className="text-sm font-medium">City Name</label>
-                                                    <Input value={city} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCity(e.target.value)} placeholder="e.g. Cairo, Egypt" />
-                                                </div>
-                                                <div>
-                                                    <label className="text-sm font-medium">Dates</label>
-                                                    <Input value={dates} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDates(e.target.value)} placeholder="e.g. July 15-20, 2026" />
-                                                </div>
-                                                <div>
-                                                    <label className="text-sm font-medium">Image URL</label>
-                                                    <Input value={image} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setImage(e.target.value)} placeholder="https://..." />
-                                                </div>
-                                                <div>
-                                                    <label className="text-sm font-medium">Description</label>
-                                                    <Input value={desc} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDesc(e.target.value)} placeholder="Short description..." />
-                                                </div>
-                                                <Button onClick={handleSave} className="w-full">Update Summit</Button>
-                                            </div>
-                                        </DialogContent>
-                                    </Dialog>
+                                    <Button variant="outline" size="icon" onClick={() => openEditModal(summit)}>
+                                        <Edit2 className="h-4 w-4" />
+                                    </Button>
                                     <Button variant="destructive" size="icon" onClick={() => handleDelete(summit.id)}>
                                         <Trash2 className="h-4 w-4" />
                                     </Button>
@@ -212,6 +160,67 @@ export default function SummitsCMS() {
                     ))}
                 </div>
             )}
+
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogContent className="bg-white text-slate-900 sm:max-w-[425px]">
+                    <DialogHeader>
+                        <DialogTitle>{editingSummit ? 'Edit Summit' : 'Add New Summit'}</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div>
+                            <label className="text-sm font-medium text-slate-700">City Name</label>
+                            <Input
+                                value={city}
+                                onChange={e => setCity(e.target.value)}
+                                placeholder="e.g. Cairo, Egypt"
+                                className="bg-white text-slate-900 border-slate-300"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium text-slate-700">Dates</label>
+                            <Input
+                                value={dates}
+                                onChange={e => setDates(e.target.value)}
+                                placeholder="e.g. July 15-20, 2026"
+                                className="bg-white text-slate-900 border-slate-300"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium text-slate-700">Image URL</label>
+                            <Input
+                                value={image}
+                                onChange={e => setImage(e.target.value)}
+                                placeholder="https://..."
+                                className="bg-white text-slate-900 border-slate-300"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium text-slate-700">Description</label>
+                            <Textarea
+                                value={desc}
+                                onChange={e => setDesc(e.target.value)}
+                                placeholder="Short description..."
+                                className="bg-white text-slate-900 border-slate-300"
+                            />
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="checkbox"
+                                id="is_active"
+                                checked={isActive}
+                                onChange={e => setIsActive(e.target.checked)}
+                                className="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-600"
+                            />
+                            <label htmlFor="is_active" className="text-sm font-medium text-slate-700">
+                                Visible on website
+                            </label>
+                        </div>
+                        <Button onClick={handleSave} className="w-full">
+                            {editingSummit ? 'Update Summit' : 'Create Summit'}
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

@@ -23,9 +23,9 @@ export default function LoginPage() {
 
         console.log("Attempting login with:", email);
         try {
-            // Create a timeout promise that rejects after 10 seconds
+            // Create a timeout promise that rejects after 20 seconds
             const timeoutPromise = new Promise((_, reject) => {
-                setTimeout(() => reject(new Error('Request timed out')), 10000);
+                setTimeout(() => reject(new Error('Request timed out')), 20000);
             });
 
             const { data, error } = await Promise.race([
@@ -48,7 +48,11 @@ export default function LoginPage() {
             console.log("Login successful, redirecting...");
             // Force a hard refresh to update server-side session
             router.refresh();
-            window.location.href = '/dashboard';
+
+            // simple check for 'next' param
+            const params = new URLSearchParams(window.location.search);
+            const next = params.get('next') || '/dashboard';
+            window.location.href = next;
         } catch (err: any) {
             console.error("Unexpected error:", err);
             setError(err.message || 'An unexpected error occurred');

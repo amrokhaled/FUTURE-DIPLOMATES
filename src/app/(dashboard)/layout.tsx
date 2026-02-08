@@ -12,13 +12,15 @@ import {
     Loader2,
     Menu,
     X,
-    Shield
+    Shield,
+    User
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 
 const navigation = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+    { name: "My Profile", href: "/profile", icon: User },
     { name: "My Applications", href: "/applications", icon: ClipboardList },
     { name: "Documents", href: "/documents", icon: FileText },
 ];
@@ -26,6 +28,7 @@ const navigation = [
 interface UserProfile {
     full_name: string;
     email: string;
+    avatar_url?: string;
 }
 
 export default function DashboardLayout({
@@ -45,7 +48,9 @@ export default function DashboardLayout({
     useEffect(() => {
         async function getUser() {
             try {
-                const { data: { user: authUser } } = await supabase.auth.getUser();
+                // Use getSession for faster check
+                const { data: { session } } = await supabase.auth.getSession();
+                const authUser = session?.user;
 
                 if (!authUser) {
                     // Not logged in - redirect to home
@@ -53,10 +58,16 @@ export default function DashboardLayout({
                     return;
                 }
 
-                const email = (authUser.email || '').toLowerCase();
+                const { data: dbUser } = await supabase
+                    .from('profiles')
+                    .select('full_name, avatar_url')
+                    .eq('id', authUser.id)
+                    .single();
+
                 setUser({
-                    full_name: authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'User',
-                    email: authUser.email || ''
+                    full_name: dbUser?.full_name || authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'User',
+                    email: authUser.email || '',
+                    avatar_url: dbUser?.avatar_url
                 });
 
 
@@ -70,10 +81,10 @@ export default function DashboardLayout({
             setLoading(false);
         }
 
-        // 3 second timeout fallback
+        // 5 second timeout fallback
         const timeout = setTimeout(() => {
-            if (loading) setLoading(false);
-        }, 3000);
+            setLoading(false);
+        }, 5000);
 
         getUser().finally(() => clearTimeout(timeout));
     }, [supabase]);
@@ -169,8 +180,12 @@ export default function DashboardLayout({
 
                 <div className="p-4 border-t bg-gray-50">
                     <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 rounded-full bg-brand-100 text-brand flex items-center justify-center font-bold">
-                            {initials}
+                        <div className="w-10 h-10 rounded-full bg-brand-100 text-brand flex items-center justify-center font-bold overflow-hidden">
+                            {user?.avatar_url ? (
+                                <img src={user.avatar_url} alt={user.full_name} className="w-full h-full object-cover" />
+                            ) : (
+                                initials
+                            )}
                         </div>
                         <div className="flex-1 min-w-0">
                             <p className="font-medium text-sm truncate text-gray-900">{user?.full_name}</p>

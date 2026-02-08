@@ -172,6 +172,10 @@ export function RegistrationForm() {
                     ambassador_name: formData.ambassadorName,
                     reason_for_attending: formData.reasonForAttending,
                     has_attended_before: formData.hasAttendedBefore === 'Yes',
+                    payment_plan: formData.paymentPlan,
+                    investment_amount: formData.investmentAmount,
+                    accommodation: formData.accommodation,
+                    referral_other: formData.referralOther,
                 });
 
             if (bookingError) {

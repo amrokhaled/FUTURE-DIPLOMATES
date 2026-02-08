@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Menu, X, ChevronDown, ChevronRight, User, LogOut, LayoutDashboard, Loader2, Shield } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 
 const navigation = [
     { name: "Home", href: "/" },
@@ -38,6 +38,7 @@ interface UserData {
     name: string;
     email: string;
     role?: string;
+    avatar_url?: string;
 }
 
 export function Header() {
@@ -57,28 +58,25 @@ export function Header() {
     useEffect(() => {
         async function checkUser() {
             try {
-                // Quick check for session in local storage to avoid waiting for network
-                const hasSession = Object.keys(localStorage).some(k => k.startsWith('sb-') && k.endsWith('-auth-token'));
-                if (!hasSession) {
-                    setLoading(false);
-                }
-
-                const { data: { user: authUser } } = await supabase.auth.getUser();
+                // Use getSession for faster initial load (checks local storage)
+                const { data: { session } } = await supabase.auth.getSession();
+                const authUser = session?.user;
 
                 if (authUser) {
-                    // Fetch user role
-                    const { data: dbUser, error: roleError } = await supabase
+                    // Fetch full user profile
+                    const { data: dbUser, error: profileError } = await supabase
                         .from('profiles')
-                        .select('role')
+                        .select('full_name, role, avatar_url')
                         .eq('id', authUser.id)
                         .single();
 
-                    console.log("User Check:", { authUser, dbUser, roleError });
+                    console.log("User Check:", { authUser, dbUser, profileError });
 
                     setUser({
-                        name: authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'User',
+                        name: dbUser?.full_name || authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'User',
                         email: authUser.email || '',
-                        role: dbUser?.role
+                        role: dbUser?.role,
+                        avatar_url: dbUser?.avatar_url
                     });
 
                     // Check for bookings with timeout
@@ -105,29 +103,34 @@ export function Header() {
             }
         }
 
-        // Safety timeout - ensure loading stops after 3 seconds max even if auth hangs
+        // Safety timeout - ensure loading stops after 5 seconds max even if auth hangs
         const timeoutId = setTimeout(() => {
             setLoading(false);
-        }, 3000);
+        }, 5000);
 
-        checkUser().finally(() => clearTimeout(timeoutId));
+        checkUser().finally(() => {
+            // Keep specific loading true for a tiny bit more to prevent flashes
+            setTimeout(() => setLoading(false), 200);
+            clearTimeout(timeoutId);
+        });
 
         // Listen for auth changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: string, session: any) => {
             if (event === 'SIGNED_IN' && session?.user) {
-                // Fetch user role
-                const { data: dbUser, error: roleError } = await supabase
+                // Fetch full user profile
+                const { data: dbUser, error: profileError } = await supabase
                     .from('profiles')
-                    .select('role')
+                    .select('full_name, role, avatar_url')
                     .eq('id', session.user.id)
                     .single();
 
-                console.log("Session User Check:", { user: session.user, dbUser, roleError });
+                console.log("Session User Check:", { user: session.user, dbUser, profileError });
 
                 setUser({
-                    name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
+                    name: dbUser?.full_name || session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
                     email: session.user.email || '',
-                    role: dbUser?.role
+                    role: dbUser?.role,
+                    avatar_url: dbUser?.avatar_url
                 });
 
                 // Check for bookings on sign in
@@ -139,10 +142,15 @@ export function Header() {
                 if (count && count > 0) {
                     setHasBooking(true);
                 }
-            } else if (event === 'SIGNED_OUT') {
-                setUser(null);
-                setHasBooking(false);
-                setLoggingOut(false);
+            } else if (event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
+                if (event === 'SIGNED_OUT') {
+                    setUser(null);
+                    setHasBooking(false);
+                    setLoggingOut(false);
+                } else {
+                    // Refresh user data on update
+                    checkUser();
+                }
             }
         });
 
@@ -234,8 +242,12 @@ export function Header() {
                                 onClick={() => setUserMenuOpen(!userMenuOpen)}
                                 className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
                             >
-                                <div className="w-8 h-8 rounded-full bg-brand text-white flex items-center justify-center text-sm font-bold">
-                                    {initials}
+                                <div className="w-8 h-8 rounded-full bg-brand text-white flex items-center justify-center text-sm font-bold overflow-hidden">
+                                    {user.avatar_url ? (
+                                        <img src={user.avatar_url} alt={user.name} className="w-full h-full object-cover" />
+                                    ) : (
+                                        initials
+                                    )}
                                 </div>
                                 <span className="text-sm font-medium text-gray-700 max-w-[100px] truncate">
                                     {user.name}
@@ -258,6 +270,14 @@ export function Header() {
                                         <LayoutDashboard className="w-4 h-4" />
                                         My Dashboard
                                     </Link>
+                                    <Link
+                                        href="/profile"
+                                        className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                                        onClick={() => setUserMenuOpen(false)}
+                                    >
+                                        <User className="w-4 h-4" />
+                                        My Profile
+                                    </Link>
                                     <button
                                         onClick={handleLogout}
                                         disabled={loggingOut}
@@ -269,11 +289,22 @@ export function Header() {
                                 </div>
                             )}
                         </div>
-                    ) : (
+                    ) : !loading && (
                         // Not logged in - show login/signup
-                        <>
-                            {/* Public Login/Signup hidden for guests as requested */}
-                        </>
+                        <div className="flex items-center gap-4">
+                            <Link
+                                href="/login"
+                                className="text-sm font-semibold text-gray-700 hover:text-brand transition-colors"
+                            >
+                                Login
+                            </Link>
+                            <Link
+                                href="/signup"
+                                className="text-sm font-semibold text-gray-700 hover:text-brand transition-colors"
+                            >
+                                Sign Up
+                            </Link>
+                        </div>
                     )}
 
                     <Button variant="gold" size="sm" asChild className="font-semibold shadow-sm">
@@ -342,8 +373,12 @@ export function Header() {
                             {user ? (
                                 <>
                                     <div className="flex items-center gap-3 px-3 py-2 bg-gray-50 rounded-lg">
-                                        <div className="w-10 h-10 rounded-full bg-brand text-white flex items-center justify-center font-bold">
-                                            {initials}
+                                        <div className="w-10 h-10 rounded-full bg-brand text-white flex items-center justify-center font-bold overflow-hidden">
+                                            {user.avatar_url ? (
+                                                <img src={user.avatar_url} alt={user.name} className="w-full h-full object-cover" />
+                                            ) : (
+                                                initials
+                                            )}
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <p className="text-sm font-semibold text-gray-900 truncate">{user.name}</p>
@@ -372,9 +407,14 @@ export function Header() {
                                     </Button>
                                 </>
                             ) : (
-                                <>
-                                    {/* Public Login/Signup hidden for guests as requested */}
-                                </>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <Button variant="outline" className="w-full font-semibold" asChild>
+                                        <Link href="/login" onClick={() => setMobileMenuOpen(false)}>Login</Link>
+                                    </Button>
+                                    <Button variant="outline" className="w-full font-semibold" asChild>
+                                        <Link href="/signup" onClick={() => setMobileMenuOpen(false)}>Sign Up</Link>
+                                    </Button>
+                                </div>
                             )}
 
                             <Button variant="gold" className="w-full font-bold shadow-md" size="lg" asChild>

@@ -17,9 +17,13 @@ export default function AdminDashboard() {
     useEffect(() => {
         async function loadStats() {
             // 1. Get total bookings
-            const { count: bookingsCount, data } = await supabase
+            const { count: bookingsCount, data, error } = await supabase
                 .from('bookings')
                 .select('*', { count: 'exact' });
+
+            if (error) {
+                console.error("Dashboard Stats Error:", error);
+            }
 
             interface Booking {
                 status: string;
