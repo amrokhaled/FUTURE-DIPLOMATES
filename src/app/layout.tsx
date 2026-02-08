@@ -10,6 +10,9 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
     title: "Future Diplomats - International Diplomacy & Leadership Conference",
     description: "Join the world's most prestigious diplomacy simulation platform.",
+    icons: {
+        icon: "/logo.png",
+    },
 };
 
 export default function RootLayout({

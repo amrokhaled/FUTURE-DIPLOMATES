@@ -20,6 +20,12 @@ interface Application {
     reason_for_attending: string;
     tshirt_size: string;
     referral_source: string;
+    attendee_passport: string;
+    attendee_dob: string;
+    attendee_sex: string;
+    attendee_address: string;
+    ambassador_name: string;
+    has_attended_before: boolean;
 }
 
 // Package options matching home page
@@ -88,7 +94,7 @@ export default function AdminApplications() {
     const startEdit = (app: Application) => {
         setEditMode(app.id);
         setEditData({
-            package_type: app.package_type || 'conference',
+            package_type: app.package_type || '',
             amount: app.amount || 750,
             payment_status: app.payment_status || 'pending'
         });
@@ -164,7 +170,7 @@ export default function AdminApplications() {
                         <Users className="w-8 h-8 text-brand" /> Applications
                     </h1>
                     <p className="text-gray-500">
-                        Future Diplomats Cairo Edition 2026 • {applications.length} total applications
+                        {applications.length} total applications
                     </p>
                 </div>
                 <div className="flex gap-3">
@@ -242,10 +248,11 @@ export default function AdminApplications() {
                                         <td className="px-6 py-4">
                                             {editMode === app.id ? (
                                                 <select
-                                                    value={editData?.package_type || 'conference'}
+                                                    value={editData?.package_type || ''}
                                                     onChange={(e) => handlePackageChange(e.target.value)}
                                                     className="border rounded px-2 py-1 text-sm bg-white"
                                                 >
+                                                    <option value="" disabled>Select Package</option>
                                                     {PACKAGES.map(pkg => (
                                                         <option key={pkg.value} value={pkg.value}>
                                                             {pkg.label}
@@ -254,7 +261,7 @@ export default function AdminApplications() {
                                                 </select>
                                             ) : (
                                                 <span className="capitalize font-medium">
-                                                    {PACKAGES.find(p => p.value === app.package_type)?.label || app.package_type || 'Conference'}
+                                                    {PACKAGES.find(p => p.value === app.package_type)?.label || app.package_type || 'N/A'}
                                                 </span>
                                             )}
                                         </td>
@@ -404,6 +411,43 @@ export default function AdminApplications() {
                                     <span className={`px-2.5 py-1 rounded-full text-xs font-bold uppercase ${getStatusColor(selectedApp.payment_status)}`}>
                                         {selectedApp.payment_status}
                                     </span>
+                                </div>
+
+                                {/* Additional Details */}
+                                <div className="border-t pt-4">
+                                    <h3 className="font-bold text-gray-900 mb-3">Personal Details</h3>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <p className="text-xs text-gray-500 uppercase font-bold">Passport Number</p>
+                                            <p className="text-gray-900">{selectedApp.attendee_passport || 'N/A'}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-gray-500 uppercase font-bold">DOB</p>
+                                            <p className="text-gray-900">{selectedApp.attendee_dob || 'N/A'}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-gray-500 uppercase font-bold">Sex</p>
+                                            <p className="text-gray-900">{selectedApp.attendee_sex || 'N/A'}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-gray-500 uppercase font-bold">Address</p>
+                                            <p className="text-gray-900">{selectedApp.attendee_address || 'N/A'}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="border-t pt-4">
+                                    <h3 className="font-bold text-gray-900 mb-3">Other Information</h3>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <p className="text-xs text-gray-500 uppercase font-bold">Ambassador Name</p>
+                                            <p className="text-gray-900">{selectedApp.ambassador_name || 'N/A'}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-gray-500 uppercase font-bold">Attended Before</p>
+                                            <p className="text-gray-900">{selectedApp.has_attended_before ? 'Yes' : 'No'}</p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             {selectedApp.reason_for_attending && (
