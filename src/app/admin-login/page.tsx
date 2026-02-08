@@ -40,16 +40,6 @@ export default function AdminLoginPage() {
         }
 
         // Check if user is an admin
-        const ADMIN_EMAILS = ['meto.khaled011@gmail.com', 'amrokhaled9603@gmail.com', 'admin@futurediplomates.com'];
-        const userEmail = (authData.user.email || '').toLowerCase();
-
-        if (ADMIN_EMAILS.some(e => e.toLowerCase() === userEmail)) {
-            // Hardcoded admin access - allow
-            router.push('/admin');
-            router.refresh();
-            return;
-        }
-
         const { data: adminUser, error: adminError } = await supabase
             .from('admin_users')
             .select('id, role')
@@ -103,7 +93,7 @@ export default function AdminLoginPage() {
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     className="w-full border rounded-lg pl-10 pr-4 py-3 text-sm outline-none focus:ring-2 focus:ring-brand"
-                                    placeholder="admin@futurediplomats.com"
+                                    placeholder="user@example.com"
                                 />
                             </div>
                         </div>

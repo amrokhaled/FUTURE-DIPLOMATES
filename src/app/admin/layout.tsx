@@ -32,17 +32,6 @@ export default function AdminLayout({
                     return;
                 }
 
-                const ADMIN_EMAILS = ['meto.khaled011@gmail.com', 'amrokhaled9603@gmail.com', 'admin@futurediplomates.com'];
-                const email = (user.email || '').toLowerCase();
-
-                if (ADMIN_EMAILS.some(e => e.toLowerCase() === email)) {
-                    // Hardcoded admin access
-                    setAdminEmail(user.email || '');
-                    setIsAdmin(true);
-                    setLoading(false);
-                    return;
-                }
-
                 // Check if user is admin in database
                 const { data: adminUser } = await supabase
                     .from('admin_users')
