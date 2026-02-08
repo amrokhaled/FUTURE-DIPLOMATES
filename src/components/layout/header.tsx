@@ -57,6 +57,12 @@ export function Header() {
     useEffect(() => {
         async function checkUser() {
             try {
+                // Quick check for session in local storage to avoid waiting for network
+                const hasSession = Object.keys(localStorage).some(k => k.startsWith('sb-') && k.endsWith('-auth-token'));
+                if (!hasSession) {
+                    setLoading(false);
+                }
+
                 const { data: { user: authUser } } = await supabase.auth.getUser();
 
                 if (authUser) {
