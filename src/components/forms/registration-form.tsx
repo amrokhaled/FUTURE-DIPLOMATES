@@ -160,6 +160,7 @@ export function RegistrationForm() {
                     attendee_name: `${formData.firstName} ${formData.lastName}`.trim(),
                     attendee_email: formData.email,
                     attendee_phone: formData.phone,
+                    attendee_whatsapp: formData.whatsapp,
                     attendee_nationality: formData.nationality,
                     attendee_passport: formData.passport,
                     attendee_dob: dob,

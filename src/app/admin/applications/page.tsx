@@ -11,6 +11,7 @@ interface Application {
     attendee_name: string;
     attendee_email: string;
     attendee_phone: string;
+    attendee_whatsapp: string;
     attendee_nationality: string;
     attendee_organization: string;
     package_type: string;
@@ -235,6 +236,9 @@ export default function AdminApplications() {
                                                 <p className="font-medium text-gray-900">{app.attendee_name || 'N/A'}</p>
                                                 <p className="text-xs text-gray-500">{app.attendee_email}</p>
                                                 <p className="text-xs text-gray-400">{app.attendee_phone}</p>
+                                                {app.attendee_whatsapp && (
+                                                    <p className="text-xs text-green-600">WhatsApp: {app.attendee_whatsapp}</p>
+                                                )}
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">
