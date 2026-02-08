@@ -185,7 +185,7 @@ export default function AdminOverview() {
                                             {app.attendee_nationality || 'N/A'}
                                         </td>
                                         <td className="px-6 py-4">
-                                            <span className="capitalize">{app.package_type || 'standard'}</span>
+                                            <span className="capitalize">{app.package_type || 'N/A'}</span>
                                             <span className="text-gray-400 text-xs ml-1">(${app.amount || 0})</span>
                                         </td>
                                         <td className="px-6 py-4">

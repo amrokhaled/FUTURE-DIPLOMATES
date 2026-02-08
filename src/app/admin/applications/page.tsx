@@ -95,7 +95,7 @@ export default function AdminApplications() {
         setEditMode(app.id);
         setEditData({
             package_type: app.package_type || '',
-            amount: app.amount || 750,
+            amount: app.amount || 0,
             payment_status: app.payment_status || 'pending'
         });
     };
